@@ -21,9 +21,9 @@ class Login extends Controller
 
     public function login()
     {
-        // sleep(100000);
+        # 获取表单数据
         $data = request() -> param();
-
+        # 设定验证规则
         $rule = [
             'username'  => 'require',
             'password'  => 'require|length:4,16',
@@ -37,15 +37,16 @@ class Login extends Controller
             'captcha.length'       => '验证码长度必须是4位'
         ];
         $validate = new \think\Validate($rule,$msg);
+        # 判断验证结果
         if( ! $validate -> check( $data ) ){
-
+            # 获取错误信息
             $error = $validate -> getError();
             $res = [
                 'code' => 300,
                 'msg'  => $error
             ];
 
-            echo json_encode($res);die;
+            return json($res);
         }
         #检测验证码
         if( !captcha_check($data['captcha']) ){
@@ -55,10 +56,10 @@ class Login extends Controller
                 'msg'  => '验证码错误'
             ];
 
-            echo json_encode($res);die;
+            return json($res);
         }
 
-
+        # 查询数据库
         $manager = admin::where('username',$data['username']) -> where('password',encrypt_password( $data['password']) ) -> find();
 
         if( $manager ){
