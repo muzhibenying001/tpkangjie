@@ -1,0 +1,181 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit|ie-comp|ie-stand">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<link href="/static/h-ui/css/H-ui.min.css" rel="stylesheet" type="text/css" />
+<link href="/static/h-ui.admin/css/H-ui.login.css" rel="stylesheet" type="text/css" />
+<link href="/static/h-ui.admin/css/style.css" rel="stylesheet" type="text/css" />
+<link href="/lib/Hui-iconfont/1.0.8/iconfont.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/lib/layui/css/layui.css">
+<title>后台登录 - kangjie.admin</title>
+</head>
+<body>
+<input type="hidden" id="TenantId" name="TenantId" value="" />
+<div class="header"></div>
+<div class="loginWraper">
+  <div id="loginform" class="loginBox" style="padding-bottom: 15px;">
+
+    <form class="form form-horizontal" action="index.html" method="post">
+      <div class="Huialert Huialert-info"><i class="Hui-iconfont">&#xe6a6;</i> 请您登陆</div>
+      <div class="row cl">
+        <label class="form-label col-xs-3"><i class="Hui-iconfont">&#xe60d;</i></label>
+        <div class="formControls col-xs-8">
+          <input id="username" name="username" type="text" placeholder="账户" class="input-text size-L">
+        </div>
+      </div>
+      <div class="row cl">
+        <label class="form-label col-xs-3"><i class="Hui-iconfont">&#xe60e;</i></label>
+        <div class="formControls col-xs-8">
+          <input id="password" name="password" type="password" placeholder="密码" class="input-text size-L">
+        </div>
+      </div>
+      <div class="row cl">
+        <div class="formControls col-xs-8 col-xs-offset-3">
+          <input class="input-text size-L" type="text" placeholder="验证码" style="width:150px;" id="captcha">
+          <img src="{:captcha_src()}" onclick="this.src='{:captcha_src()}?'+Math.random()" id="captcha_src"> <a id="kanbuq" href="javascript:;" onclick="document.getElementById('captcha_src').src='{:captcha_src()}?'+Math.random()">看不清，换一张</a> </div>
+      </div>
+      <div class="row cl">
+        <div class="formControls col-xs-8 col-xs-offset-3">
+          <label for="online">
+            <input type="checkbox" name="online" id="online" value="">
+            使我保持登录状态</label>
+        </div>
+      </div>
+      <div class="row cl">
+        <div class="formControls col-xs-8 col-xs-offset-3">
+          <input name="" type="button" id="submit" class="btn btn-success radius size-L" value=" 登 陆 ">
+          <input name="" type="reset" class="btn btn-default radius size-L" value="&nbsp;取&nbsp;&nbsp;&nbsp;&nbsp;消&nbsp;">
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="footer">Copyright 你的公司名称 by H-ui.admin v3.1</div>
+<script type="text/javascript" src="/lib/jquery/1.9.1/jquery.min.js"></script> 
+<script type="text/javascript" src="/static/h-ui/js/H-ui.min.js"></script>
+<script src="/lib/layer/2.4/layer.js"></script>
+<script type="text/javascript">
+$(function () {
+/*登陆按钮点击事件*/
+$('#submit').click(function(){
+    submit();
+});
+/*页面按下回车事件*/
+$(document).keyup(function(event){
+    if(event.keyCode ==13){
+        submit();
+    }
+});
+/*username输入框失去焦点事件*/
+$('#username').blur(function(){
+    yanzheng('username','请输入用户名');
+});
+/*password输入框失去焦点事件*/
+$('#password').blur(function(){
+    yanzheng('password','请输入密码');
+});
+/*captcha输入框失去焦点事件*/
+$('#captcha').blur(function(){
+    yanzheng('captcha','请输入验证码');
+});
+/*登陆函数*/
+function submit(){
+    /*执行表单数据验证*/
+    if( yanzheng('username','用户名不能为空！') && yanzheng('password','密码不能为空！') && yanzheng('captcha','验证码不能为空！') ){
+        let data = { 
+            'username': $('#username').val(),
+            'password': $('#password').val(),
+            'captcha' : $('#captcha').val()
+        }
+        /*发送ajax*/
+        $.ajax({
+        'url'   : '{:url("admin/login/login")}',
+        'type'  : 'post',
+        'data'  : data,
+        'dataType'  : 'json',
+        'timeout'   : '10000',
+        'beforeSend': function(XHR){
+            var index = layer.load(2, {time: 10*1000});
+            $('#submit').attr('disabled',true);
+            $('#submit').val('正在登陆...');
+        },
+        'complete'  :function(){                
+            layer.closeAll('loading');
+            document.getElementById('captcha_src').src='{:captcha_src()}?'+Math.random();
+        },
+        'success'   : function(res){
+            if( res.code != 200 ){
+                layer.msg(res.msg, {icon: res.num,time:1500});
+              $('#submit').attr('disabled',false);
+              $('#submit').val(' 登 陆 ');
+                return false;
+            }
+
+            var FUNC=[
+              function() {
+                $('#submit').attr('disabled',true);
+                $('#submit').html('正在登陆...');
+                    aniCB();
+                },
+                function() {
+                    layer.msg('欢迎回来', {icon: 6,time:2000});
+                    aniCB();
+                },
+                function() {
+                    setInterval(function(){
+                        $(location).attr('href', '{:url("admin/index/index")}');
+                    },1000);
+                }
+            ];  
+            var aniCB=function() {  
+                $(document).dequeue("myAnimation");  
+            }  
+            $(document).queue("myAnimation",FUNC);  
+            aniCB();
+
+        },
+        'error'     : function(XMLHttpRequest, textStatus, errorThrown){
+            switch(textStatus){
+                case 'timeout':
+                    layer.msg('连接超时，请检查网络', {icon: 2,time:1500});
+                    $('#submit').attr('disabled',false);
+                $('#submit').html('登 陆');
+                    break;
+                case 'error':
+                    layer.msg(textStatus, {icon: 2,time:1500});
+                    $('#submit').attr('disabled',false);
+                $('#submit').html('登 陆');
+                    break;
+                default:
+                    layer.msg('出错啦，请联系管理员处理！', {icon: 2,time:2000});
+                    $('#submit').attr('disabled',false);
+                $('#submit').html('登 陆');
+                    break;
+            }
+        }
+    });
+}
+
+}
+
+function yanzheng(doc,text){
+    if( $('#'+doc).val().trim() == '' ){
+        $('#'+doc).css('border','1px solid red');
+        $('.Huialert').attr('class','Huialert Huialert-error').html('<i class="Hui-iconfont">&#xe6a6;</i> '+text);
+        return false;
+    }else{
+        $('#'+doc).css('border','1px solid #fff');
+        $('.Huialert').attr('class','Huialert Huialert-info').html('请您登陆');
+        return true;
+    }
+}
+
+})
+
+</script>
+</body>
+</html>
